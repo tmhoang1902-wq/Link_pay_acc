@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cas"></canvas>
+    <script>
+
+        const canvas = document.getElementById("cas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+
+        const fireworkSound = new Audio('fireworks.mp3');
+
+        let bigbooms = [];
+        let lastTime = new Date();
+
+        function getRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        class Frag {
+            constructor(x, y, r, color, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.r = r;
+                this.color = color;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.dead = false;
+            }
+            moveTo() {
+                this.x += (this.targetX - this.x) * 0.05;
+                this.y += (this.targetY - this.y) * 0.05;
+                if (Math.abs(this.targetX - this.x) < 1 && Math.abs(this.targetY - this.y) < 1) {
+                    this.dead = true;
+                }
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+                ctx.fillStyle = `rgb(${this.color.a}, ${this.color.b}, ${this.color.c})`;
+                ctx.fill();
+            }
+        }
+
+        class Boom {
+            constructor(x, r, c, boomArea) {
+                this.booms = [];
+                this.x = x;
+                this.y = canvas.height + r;
+                this.r = r;
+                this.c = c;
+                this.boomArea = boomArea;
+                this.dead = false;
+                this.ba = parseInt(getRandom(80, 200));
+            }
+            _paint() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+                ctx.fillStyle = this.c;
+                ctx.fill();
+                ctx.restore();
+            }
+            _drawlight() {
+                ctx.save();
+                ctx.fillStyle = "rgba(255,228,150,0.3)";
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r + 3 * Math.random() + 1, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+            }
+            _move() {
+                const dx = this.boomArea.x - this.x;
+                const dy = this.boomArea.y - this.y;
+                this.x += dx * 0.01;
+                this.y += dy * 0.01;
+                if (Math.abs(dx) <= this.ba && Math.abs(dy) <= this.ba) {
+                    this._boom();
+                    this.dead = true;
+                } else {
+                    this._paint();
+                    this._drawlight();
+                }
+            }
+            _boom() {
+                try { fireworkSound.play(); } catch (e) { }
+                const fragNum = getRandom(30, 200);
+                const fanwei = parseInt(getRandom(300, 400));
+                for (let i = 0; i < fragNum; i++) {
+                    const color = {
+                        a: parseInt(getRandom(0, 255)),
+                        b: parseInt(getRandom(0, 255)),
+                        c: parseInt(getRandom(0, 255))
+                    };
+                    const a = getRandom(-Math.PI, Math.PI);
+                    const x = getRandom(0, fanwei) * Math.cos(a) + this.x;
+                    const y = getRandom(0, fanwei) * Math.sin(a) + this.y;
+                    const radius = getRandom(0, 2);
+                    const frag = new Frag(this.x, this.y, radius, color, x, y);
+                    this.booms.push(frag);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.save();
+            ctx.fillStyle = "rgba(0,5,24,0.1)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
+            const newTime = new Date();
+            if (newTime - lastTime > 1000 + (window.innerHeight - 767) / 2) {
+                const random = Math.random() * 100 > 33;
+                const x = getRandom(canvas.width / 5, canvas.width * 4 / 5);
+                const y = getRandom(50, 200);
+                if (random) {
+                    const bigboom = new Boom(
+                        getRandom(canvas.width / 3, canvas.width * 2 / 3),
+                        2,
+                        "#FFF",
+                        { x, y }
+                    );
+                    bigbooms.push(bigboom);
+                } else {
+                    const bigboom = new Boom(
+                        getRandom(canvas.width / 3, canvas.width * 2 / 3),
+                        2,
+                        "#FFF",
+                        { x: canvas.width / 2, y: 200 }
+                    );
+                    bigbooms.push(bigboom);
+                }
+                lastTime = newTime;
+            }
+
+            for (let i = bigbooms.length - 1; i >= 0; i--) {
+                const boom = bigbooms[i];
+                if (!boom.dead) {
+                    boom._move();
+                } else {
+                    for (let j = boom.booms.length - 1; j >= 0; j--) {
+                        const frag = boom.booms[j];
+                        if (!frag.dead) {
+                            frag.moveTo();
+                        } else {
+                            boom.booms.splice(j, 1);
+                        }
+                    }
+                    if (boom.booms.length === 0) {
+                        bigbooms.splice(i, 1);
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        canvas.onclick = function (event) {
+            const x = event.clientX;
+            const y = event.clientY;
+            const bigboom = new Boom(
+                getRandom(canvas.width / 3, canvas.width * 2 / 3),
+                2,
+                "#FFF",
+                { x, y }
+            );
+            bigbooms.push(bigboom);
+        };
+
+        // --- Phần chữ HAPPY NEW YEAR 2026 (hiệu ứng hạt) ---
+        // Sử dụng lại canvas chính, không tạo canvas mới
+        let w = canvas.width;
+        let h = canvas.height;
+        let particles = 99;
+        let chars = [];
+        let current = -1;
+        const str = ['Happy', 'New', 'Year', '2026'];
+        const duration = 5000;
+
+        function makeChar(c) {
+            const tmp = document.createElement('canvas');
+            const size = tmp.width = tmp.height = w < 400 ? 200 : 300;
+            const tmpCtx = tmp.getContext('2d');
+            tmpCtx.font = 'bold ' + size + 'px Arial';
+            tmpCtx.fillStyle = 'white';
+            tmpCtx.textBaseline = 'middle';
+            tmpCtx.textAlign = 'center';
+            tmpCtx.fillText(c, size / 2, size / 2);
+            const charData = tmpCtx.getImageData(0, 0, size, size);
+            const charParticles = [];
+            for (let i = 0; charParticles.length < particles; i++) {
+                const x = size * Math.random();
+                const y = size * Math.random();
+                const offset = (parseInt(y) * size + parseInt(x)) * 4;
+                if (offset < charData.data.length && charData.data[offset] > 0) {
+                    charParticles.push([x - size / 2, y - size / 2]);
+                }
+            }
+            return charParticles;
+        }
+
+        function makeChars(t) {
+            const actual = Math.floor(t / duration) % str.length;
+            if (current === actual) return;
+            current = actual;
+            chars = [...str[actual]].map(makeChar);
+        }
+
+        function render(t) {
+            makeChars(t);
+            requestAnimationFrame(render);
+            ctx.fillStyle = '#00000010';
+            ctx.fillRect(0, 0, w, h);
+            chars.forEach((pts, i) => firework(t, i, pts));
+        }
+
+        function firework(t, i, pts) {
+            t -= i * 200;
+            const id = i + chars.length * Math.floor((t - (t % duration)) / duration);
+            t = (t % duration) / duration;
+            let dx = (i + 1) * w / (1 + chars.length);
+            dx += Math.min(0.33, t) * 100 * Math.sin(id);
+            let dy = h * 0.5;
+            dy += Math.sin(id * 4547.411) * h * 0.1;
+            if (t < 0.33) {
+                rocket(dx, dy, id, t * 3);
+            } else {
+                explosion(pts, dx, dy, id, Math.min(1, Math.max(0, t - 0.33) * 2));
+            }
+        }
+
+        function rocket(x, y, id, t) {
+            ctx.fillStyle = 'white';
+            let r = 2 - 2 * t + Math.pow(t, 15 * t) * 16;
+            y = h - y * t;
+            circle(x, y, r);
+        }
+
+        function explosion(pts, x, y, id, t) {
+            const dy = t * t * t * 20;
+            let r = Math.sin(id) * 1 + 3;
+            r = t < 0.5 ? (t + 0.5) * t * r : r - t * r;
+            pts.forEach((xy, i) => {
+                if (i % 20 === 0) {
+                    ctx.fillStyle = `hsl(${id * 55}, 55%, ${55 + t * Math.sin(t * 55 + i) * 45}%)`;
+                }
+                circle(t * xy[0] + x, h - y + t * xy[1] + dy, r);
+            });
+        }
+
+        function circle(x, y, r) {
+            ctx.beginPath();
+            ctx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function start() {
+            animate();         
+            resizeHandler();    
+            window.addEventListener('resize', resizeHandler);
+            requestAnimationFrame(render);  
+        }
+
+        function resizeHandler() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            particles = w < 400 ? 55 : 99;
+        }
+
+        start();
+
+        setTimeout(function() {
+            window.location.href = "firework.html";
+        }, 20000);
+    </script>
+</body>
+</html>
