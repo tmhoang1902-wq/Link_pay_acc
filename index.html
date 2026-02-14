@@ -18,6 +18,7 @@
             top: 0;
             left: 0;
         }
+        /* Nút bắt đầu */
         .start-button-container {
             position: absolute;
             top: 50%;
@@ -44,7 +45,7 @@
             transform: scale(1.1);
             box-shadow: 0 0 50px rgba(255, 26, 26, 0.9);
         }
-
+        /* Khung chúc Tết (ẩn ban đầu) */
         .button-container {
             display: none;
             background-color: #acacac00;
@@ -79,10 +80,12 @@
 <body>
     <canvas id="cas"></canvas>
 
+    <!-- Nút bắt đầu -->
     <div class="start-button-container" id="startButtonContainer">
         <button id="startBtn">Bắt đầu</button>
     </div>
 
+    <!-- Khung chúc Tết (ẩn) -->
     <div class="button-container" id="fireworkText">
         <div class="container">
             <p id="line1"></p>
@@ -93,25 +96,31 @@
     </div>
 
     <script>
+        // --- Khởi tạo canvas chung ---
         const canvas = document.getElementById("cas");
         const ctx = canvas.getContext("2d");
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let started = false;         
-        let isFirstPage = true;        
-        let startTime = null;           
+        // --- Biến trạng thái ---
+        let started = false;            // đã bắt đầu chưa?
+        let isFirstPage = true;         // đang ở trang chữ Happy New Year?
+        let startTime = null;           // thời điểm bắt đầu (ms)
 
+        // --- Nhạc nền (phát ngay sau khi bắt đầu) ---
         const backgroundMusic = new Audio('fireworks.mp3');
         backgroundMusic.loop = true;
 
+        // --- Biến toàn cục cho pháo hoa ---
         let bigbooms = [];
         let lastTime = new Date();
 
+        // Hàm random
         function getRandom(min, max) {
             return Math.random() * (max - min) + min;
         }
 
+        // --- Lớp Frag và Boom (pháo hoa) ---
         class Frag {
             constructor(x, y, r, color, targetX, targetY) {
                 this.x = x; this.y = y; this.r = r;
@@ -170,6 +179,7 @@
                 }
             }
             _boom() {
+                // Đã loại bỏ âm thanh nổ - chỉ giữ lại hiệu ứng hình ảnh
                 const fragNum = getRandom(30, 200);
                 const fanwei = parseInt(getRandom(300, 400));
                 for (let i = 0; i < fragNum; i++) {
@@ -188,6 +198,7 @@
             }
         }
 
+        // --- Animation pháo hoa nền ---
         function animate() {
             if (!started) {
                 requestAnimationFrame(animate);
@@ -236,6 +247,7 @@
             requestAnimationFrame(animate);
         }
 
+        // --- Hiệu ứng chữ "Happy New Year" (trang đầu) ---
         let w = canvas.width, h = canvas.height;
         let particles = 99;
         let chars = [];
@@ -278,6 +290,7 @@
                 return;
             }
             if (isFirstPage) {
+                // Tính thời gian đã trôi qua kể từ lúc nhấn nút
                 const elapsed = performance.now() - startTime;
                 makeChars(elapsed);
                 ctx.fillStyle = '#00000010';
@@ -327,6 +340,7 @@
             ctx.fill();
         }
 
+        // --- Hiệu ứng gõ chữ Tết ---
         function showText() {
             setTimeout(() => {
                 typeText('line1', '🎆 Năm mới 2026 đến, chúc bạn Yến cung xin khỉnh có sức khoẻ dồi dào 💪 và năng lượng tích cực mỗi ngày ❤️‍🔥.', 70, () => {
@@ -359,24 +373,35 @@
                 }
             }, speed);
         }
+
+        // --- Xử lý nút bắt đầu ---
         document.getElementById('startBtn').addEventListener('click', function() {
             if (started) return;
             started = true;
-            startTime = performance.now(); 
+            startTime = performance.now();  // ghi nhận mốc bắt đầu
+
+            // Phát nhạc nền ngay lập tức
             backgroundMusic.play().catch(e => console.log('Không thể phát nhạc nền:', e));
 
+            // Ẩn nút bắt đầu
             document.getElementById('startButtonContainer').style.display = 'none';
 
+            // Reset thời gian phát sinh pháo hoa
             lastTime = new Date();
 
+            // Bắt đầu các vòng lặp animation
             animate();
             requestAnimationFrame(render);
+
+            // Sau 20 giây, ẩn chữ Happy New Year và hiện khung chúc Tết
             setTimeout(() => {
                 isFirstPage = false;
                 document.getElementById('fireworkText').style.display = 'block';
                 showText();
             }, 20000);
         });
+
+        // Click trên canvas để bắn thêm pháo hoa (chỉ khi đã bắt đầu)
         canvas.onclick = (e) => {
             if (!started) return;
             const x = e.clientX;
@@ -385,12 +410,16 @@
                 getRandom(canvas.width/3, canvas.width*2/3),
                 2, "#FFF", { x, y }
             ));
-        }
+        };
+
+        // Resize canvas
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             w = canvas.width; h = canvas.height;
         });
+
+        // Không tự động chạy gì cả (chờ nút bắt đầu)
     </script>
 </body>
 </html>
