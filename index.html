@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy New Year 2026</title>
+    <title>Happy Birthday Thuý Hằng </title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body, html {
@@ -45,6 +45,7 @@
             transform: scale(1.1);
             box-shadow: 0 0 50px rgba(255, 26, 26, 0.9);
         }
+        /* Khung chúc Tết (ẩn ban đầu) */
         .button-container {
             display: none;
             background-color: #acacac00;
@@ -74,6 +75,7 @@
             margin: 10px 0;
             font-size: 1.5rem;
         }
+        /* Hướng dẫn nhỏ góc phải */
         .instruction {
             position: absolute;
             bottom: 20px;
@@ -84,7 +86,7 @@
             z-index: 30;
             display: none;
             text-shadow: 0 0 8px rgba(255,255,255,0.3);
-            pointer-events: none; 
+            pointer-events: none; /* để không cản trở click vào canvas */
             background: rgba(0,0,0,0.3);
             padding: 6px 12px;
             border-radius: 30px;
@@ -96,10 +98,12 @@
 <body>
     <canvas id="cas"></canvas>
 
+    <!-- Nút bắt đầu -->
     <div class="start-button-container" id="startButtonContainer">
         <button id="startBtn">Bắt đầu</button>
     </div>
 
+    <!-- Khung chúc Tết (ẩn) -->
     <div class="button-container" id="fireworkText">
         <div class="container">
             <p id="line1"></p>
@@ -109,26 +113,35 @@
         </div>
     </div>
 
+    <!-- Hướng dẫn nhỏ góc phải (ẩn ban đầu) -->
     <div class="instruction" id="instruction">Nhấn ở đâu, pháo nổ đó 🎇</div>
 
     <script>
+        // --- Khởi tạo canvas chung ---
         const canvas = document.getElementById("cas");
         const ctx = canvas.getContext("2d");
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        let started = false;           
-        let isFirstPage = true;         
-        let startTime = null;           
+
+        // --- Biến trạng thái ---
+        let started = false;            // đã bắt đầu chưa?
+        let isFirstPage = true;         // đang ở trang chữ Happy New Year?
+        let startTime = null;           // thời điểm bắt đầu (ms)
+
+        // --- Nhạc nền (phát ngay sau khi bắt đầu) ---
         const backgroundMusic = new Audio('fireworks.mp3');
         backgroundMusic.loop = true;
 
+        // --- Biến toàn cục cho pháo hoa ---
         let bigbooms = [];
         let lastTime = new Date();
 
+        // Hàm random
         function getRandom(min, max) {
             return Math.random() * (max - min) + min;
         }
 
+        // --- Lớp Frag và Boom (pháo hoa) ---
         class Frag {
             constructor(x, y, r, color, targetX, targetY) {
                 this.x = x; this.y = y; this.r = r;
@@ -187,6 +200,7 @@
                 }
             }
             _boom() {
+                // Đã loại bỏ âm thanh nổ - chỉ giữ lại hiệu ứng hình ảnh
                 const fragNum = getRandom(30, 200);
                 const fanwei = parseInt(getRandom(300, 400));
                 for (let i = 0; i < fragNum; i++) {
@@ -205,6 +219,7 @@
             }
         }
 
+        // --- Animation pháo hoa nền ---
         function animate() {
             if (!started) {
                 requestAnimationFrame(animate);
@@ -258,7 +273,7 @@
         let particles = 99;
         let chars = [];
         let current = -1;
-        const str = ['Happy', 'Birthday', 'Thuy ', 'Hang'];
+        const str = ['Happy', 'Birthday', 'Thuy', 'Hang'];
         const duration = 5000;
 
         function makeChar(c) {
@@ -346,13 +361,14 @@
             ctx.fill();
         }
 
+        // --- Hiệu ứng gõ chữ Tết ---
         function showText() {
             setTimeout(() => {
-                typeText('line1', '🎆 Sinh nhật đến, chúc chị Hằng có sức khoẻ dồi dào 💪 và năng lượng tích cực mỗi ngày ❤️‍🔥.', 70, () => {
+                typeText('line1', '🎆 Sinh nhật đến đến, chúc chị Hằng có sức khoẻ dồi dào 💪 và năng lượng tích cực mỗi ngày ❤️‍🔥.', 70, () => {
                     setTimeout(() => {
                         typeText('line2', '😊 Mong cho niềm vui 🎶, tiếng cười 😂 và hạnh phúc ❤️ sẽ luôn tìm đến chị Hằng.', 70, () => {
                             setTimeout(() => {
-                                typeText('line3', '🌸 Luôn luôn đạt được điều mình muốn 🏆 hẹ hẹ 🥰', 70, () => {
+                                typeText('line3', '🌸 Luôn luôn đạt được điều mình muốn 🏆 Và hãy tiếp tục cười nhiều hơn nhé,hẹ hẹ 🥰', 70, () => {
                                     setTimeout(() => {
                                         typeText('line4', '🎊🎉 Chúc mừng sinh nhật chị Hằng 🎉🎊', 70, () => {});
                                     }, 500);
@@ -378,21 +394,30 @@
                 }
             }, speed);
         }
+
+        // --- Xử lý nút bắt đầu ---
         document.getElementById('startBtn').addEventListener('click', function() {
             if (started) return;
             started = true;
-            startTime = performance.now();  
+            startTime = performance.now();  // ghi nhận mốc bắt đầu
+
+            // Phát nhạc nền ngay lập tức
             backgroundMusic.play().catch(e => console.log('Không thể phát nhạc nền:', e));
 
+            // Hiển thị hướng dẫn góc phải
             document.getElementById('instruction').style.display = 'block';
 
+            // Ẩn nút bắt đầu
             document.getElementById('startButtonContainer').style.display = 'none';
 
+            // Reset thời gian phát sinh pháo hoa
             lastTime = new Date();
 
+            // Bắt đầu các vòng lặp animation
             animate();
             requestAnimationFrame(render);
 
+            // Sau 20 giây, ẩn chữ Happy New Year và hiện khung chúc Tết
             setTimeout(() => {
                 isFirstPage = false;
                 document.getElementById('fireworkText').style.display = 'block';
@@ -400,6 +425,7 @@
             }, 20000);
         });
 
+        // Click trên canvas để bắn thêm pháo hoa (chỉ khi đã bắt đầu)
         canvas.onclick = (e) => {
             if (!started) return;
             const x = e.clientX;
@@ -417,6 +443,7 @@
             w = canvas.width; h = canvas.height;
         });
 
+        // Không tự động chạy gì cả (chờ nút bắt đầu)
     </script>
 </body>
 </html>
